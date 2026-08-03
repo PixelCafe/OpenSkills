@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity UI Asset Exports"
+  short_description: "Generate and export Unity-ready UI layers."
+  default_prompt: "Use $unity-ui-asset-exports to create layered UI sprites from this reference image."
