@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity 程序化 3D 传送带"
+  short_description: "构建开口、闭环和自定义路径的实体传送带，校验截面、滚筒端头与法线"
+  default_prompt: "使用 $unity-procedural-conveyor 按参考或尺寸生成 Unity 3D 传送带，确定开口或闭环拓扑，并验证实体截面、法线和相机效果。"
