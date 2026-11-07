@@ -22,9 +22,13 @@ For nonplanar paths use a parallel-transport frame. A cross-section twist is a d
 
 Open paths have distinct first and last rings. End modules must meet the actual ring positions and profiles, including rail edges. Close exposed bottoms and end faces; avoid hidden gaps between a rail, body and roller cheek. Specify an underside return route only if needed for visible animation or geometry.
 
+Preserve intentional openings when closing the solid boundaries. A requested open tray has a mouth and recessed floor, with wall thickness around that opening. A full end plate across the opening changes its structure.
+
 Closed paths use one geometric seam. Either connect last unique ring to first, or duplicate the first ring at s=L for UVs; do not create an extra degenerate segment. At the seam, positions, tangents and cross-section frames agree. Match normals even when vertices are duplicated for UVs. If a periodic texture repeats N times around length L, its phase must agree modulo N at the seam. Motion uses s=Repeat(s0+speed*time,L).
 
 Keep straight, circular, rounded-rectangle and spline loops as alternative path providers, not hardcoded generator variants. Check both local radius and global clearance; a wide sweep can self-intersect even when its centerline does not.
+
+On a closed sampled path with a duplicated final ring, compute the first and last tangents using periodic neighbors. Match the transported frame after any residual twist correction. Keep endpoint caps, endpoint fading and return-roller assemblies conditional on open topology. Assign slope profiles by segment or arc-length interval so a newly added outer return stays at its intended elevation without abrupt height thresholds.
 
 ## Roller return at an open start
 
@@ -45,6 +49,31 @@ Orient the cross product outward. Reusing only the cylinder radial normal causes
 Axle caps are discs centered on the roller axis at height R on both sides. Their planes are perpendicular to S0. Add a short cylinder rim for protrusion thickness. Keep cap normals flat on the face and radial on the edge, with duplicated vertices at that hard corner.
 
 Painted markers use this same surface function. Marker longitudinal extent may be sampled into multiple vertices so an arrow bends around a small roller instead of rotating as one rigid card. The lower face is hidden by actual depth/culling; do not draw underside arrows above opaque geometry using a forced sorting order.
+
+Use a matching lit material for belt and painted markers, preserving the belt's material settings and making only a slight base-color adjustment. After assigning deformed vertices, call Mesh.RecalculateNormals or supply equivalent smoothly varying surface normals. Shared vertices along each arrow stroke allow recalculated normals to blend across its longitudinal subdivisions. Keep the marker offset equal at the curved/flat join. Test winding with the lit material's backface culling enabled. Start the marker on the underside and let geometry occlude it throughout the rotation.
+
+## Receiving tray and discharge belt return
+
+This is an optional end-module pattern for an open conveyor. Fit the module to the selected route and reference. Define cell length separately from belt width when the project uses different units.
+
+- The tray extends from the final belt segment. Its left, right and far rim form a U whose open side faces the incoming belt. Preserve crown height at the belt-to-rim joint and around both far corners. Widen the tray in plan without lowering the crown.
+- Build the recessed floor, outer and inner walls, bottom, rounded crown, and roller end discs as actual surfaces. Choose a meaningful floor thickness and close their exposed boundaries.
+- A useful reference layout has outer width 1.4 for belt width 1, length 1.7 cells, floor at 0.75 for deck height 1, and six transverse white rollers. Roller radius is approximately width/9, roller tops are just below deck height, and their lengths nearly fill the inner width. These values are configurable.
+- A later correction requires the tray rim top to equal the main guardrail top, including its low rounded crown. With the reference cross section this is 1.067. An earlier deck-height rim produced a visible step. Verify the final choice in a side view.
+- Fit roller centers with equal spacing and allow for their radii and the far inner wall. Count all physical rollers, including the support underneath a belt return.
+- Keep the first roller and the curling belt skin as distinct geometry. Bridge the flat deck tangentially to the wrap, then curl the belt downward around the support. Add skin edge thickness as visible. The arrow follows the skin instead of being painted on the white roller.
+
+For a roller center height c and deck height H, choose belt outer radius Rb=H-c. Require Rb greater than the support roller radius. For deck height 1, support radius 1/9 and roller top 0.98, c=0.868889 and Rb=0.131111. If the first roller center is at distance d0 beyond the deck end, use a flat bridge at height H for 0<=d<=d0. Then evaluate the outer skin by arc length s:
+
+    a = (s-d0)/Rb
+    distance = d0 + Rb*sin(a)
+    height = c + Rb*cos(a)
+    normal = sin(a)*T + cos(a)*U
+    a in [0,pi]
+
+Skin and arrow evaluators share this definition. Offset the arrow along this normal by a small consistent distance, allowing its mesh to bend over the wrap. Occlude the returning underside with the tray/belt structure. Using the white roller radius for the arrow while the deck ends at height H introduces a geometric gap and the wrong apparent attachment.
+
+Check the terminal's full world-space bounds against the inlet and neighboring sections. When matching a reference where the tail stops short of the inlet, place the module first and derive the last belt endpoint from that module length. Extending a terminal from an old endpoint can overshoot. Use an overview for this relationship and close-ups for construction.
 
 ## Reference preset
 
@@ -84,6 +113,8 @@ Exercise the cases relevant to the requested edit, and use these as future regre
 - Circular loop: constant width, continuous curvature, no wedge at seam.
 - Custom spline: acceptable chord error, smooth transported frame, no inside-edge inversion or nonadjacent collisions.
 - Lighting: unit normals plus outward orientation and hard/smooth boundaries checked; use a temporary neutral directional light if necessary. Keep the final requested material appearance.
+- Return lighting: inspect short overhead and oblique recordings. The underside should emerge from occlusion in shadow, brighten continuously as normals turn toward the light, and meet the flat deck without a visibility, offset or brightness jump.
+- Receiving tray: verify the open side faces the belt, three rim sides connect at equal crown height, six rollers fit with clearance when specified, and the purple belt skin and arrow turn down around the first support together. Compare a 45-degree view, a true side view and an overview showing the inlet/tail relationship.
 - Lifecycle: edit preview, rebuild, enable/disable, domain reload, enter/exit play without duplicate geometry, deletion of user content or orphaned native meshes.
 
 Measure generated mesh positions for dimensions. A report that merely echoes the expected constants is documentation, not validation. Visual acceptance supplements, rather than replaces, those geometry checks.
